@@ -36,6 +36,7 @@ while True:
     pairs = wait.until(EC.presence_of_all_elements_located((By.XPATH, pair_xpath)))
     for pair in pairs:
         name_element = pair.find_element_by_xpath(".//a[@class='sc-cSHVUG lnITpf']/div[@class='sc-jlyJG hZRHdD']")
+        hash_element = pair.find_element_by_xpath(".//a[@class='sc-cSHVUG lnITpf']")
         liquidity_element = pair.find_element_by_xpath(".//div[@class='sc-VigVT dNgKCa']")
         volume_elements = pair.find_elements_by_xpath(".//div[@class='sc-VigVT dNgKCa']")
         if len(volume_elements) > 1:
@@ -44,9 +45,16 @@ while True:
             volume_element = None
 
         name = name_element.text
+        hashCode = hash_element.get_attribute("href")
+        hash_ = hashCode.split("pair/")[1]
+   
         liquidity = liquidity_element.text
-        volume = volume_element.text if volume_element else "N/A"
+        try:
+          volume = volume_element.text if volume_element else "N/A"
+        except StaleElementReferenceException:
+          volume = "N/A"
         pair_names.append(name)
+        pair_hash.append(hash_)
         pair_liquidity.append(liquidity)
         pair_volume.append(volume)
 
@@ -60,7 +68,7 @@ while True:
         print("Reached the last page")
         break
     previous_page_number = current_page_number
-df= pd.DataFrame(list(zip(pair_names, pair_liquidity, pair_volume)), columns =['Pair Name', 'Liquidity', 'Volume'])
+df= pd.DataFrame(list(zip(pair_names, pair_liquidity, pair_volume,pair_hash)), columns =['Pair Name', 'Liquidity', 'Volume', 'Hash_Code'])
 df.to_csv('uniswap.csv', index=False)
 
 driver.quit()
